@@ -43,9 +43,13 @@ button:active {
 
 #score-board {
     grid-template-columns: 4fr 1fr;
-    min-width: 80px;
+    min-width: 150px;
     gap: 4px;
     text-align: right;
+}
+
+.name {
+    min-width: 120px;
 }
 
 .name::after {

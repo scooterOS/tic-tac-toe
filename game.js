@@ -3,65 +3,83 @@ document.addEventListener('DOMContentLoaded', () => {
     game.init();
 });
 
+function Player(name, difficulty=null) {
+    this.name = name;
+    this.difficulty = difficulty;
+    this.isComputer = difficulty !== null;
+    this.wins = 0;
+}
+
 class TicTacToeGame {
     constructor() {
         this.board = Array(9).fill(null);
+        this.players = { 'X': new Player('Player'), 'O': new Player('Average Joe', 3) };
         this.currentPlayer = 'X';
         this.vsComputer = true;
         this.isGameOver = false;
+        this.winner = null;
     }
 
     init() {
         this.cacheDom();
         this.setupEventListeners();
-        this.render();
+        this.newGame();
     }
 
     cacheDom() {
+        this.$page = document.getElementById('page');
         this.$cells = document.querySelectorAll('.cell');
         this.$gameState = document.getElementById('game-state');
         this.$resetBtn = document.getElementById('reset-btn');
         this.$multiplayerBtn = document.getElementById('multiplayer-btn');
+        this.$swapBtn = document.getElementById('swap-btn');
+        this.$themeBtn = document.getElementById('theme-btn');
         this.$playerIcon = document.getElementById('player-icon');
         this.$playerCount = document.getElementById('player-count');
+        this.$nameX = document.querySelector('.playerX.name');
+        this.$nameO = document.querySelector('.playerO.name');
+        this.$scoreX = document.querySelector('.playerX.score');
+        this.$scoreO = document.querySelector('.playerO.score');
     }
 
     setupEventListeners() {
-        this.$cells.forEach(cell => 
-            cell.addEventListener('click', this.handleCellClick.bind(this))
-        );
-        this.$resetBtn.addEventListener('click', this.reset.bind(this));
+        this.$cells.forEach(cell => cell.addEventListener('click', this.handleCellClick.bind(this)));
+        this.$resetBtn.addEventListener('click', this.newGame.bind(this));
         this.$multiplayerBtn.addEventListener('click', this.updatePlayerCount.bind(this));
+        this.$swapBtn.addEventListener('click', this.swapOrder.bind(this));
+        this.$themeBtn.addEventListener('click', this.changeTheme.bind(this));
     }
 
     handleCellClick(event) {
         const index = event.target.dataset.index;
 
-        if (this.board[index] || this.isGameOver) return;
+        if (this.board[index] || this.players[this.currentPlayer].isComputer || this.isGameOver) return;
 
         this.makeMove(index);
-
-        if (this.vsComputer && !this.isGameOver && this.currentPlayer === 'O') {  // TODO: make computer be able to choose 'X' (also doesn't work)
-            setTimeout(() => this.computerMove(), 300);
-        }
+        this.computerMove();
     }
 
     makeMove(index) {
         this.board[index] = this.currentPlayer;
-        this.render();
 
         if (this.checkWinner()) {
-            this.endGame(`${this.currentPlayer} wins!`, true);
+            this.winner = this.players[this.currentPlayer];
+            this.endGame();
         } 
         else if (this.board.every(cell => cell !== null)) {
-            this.endGame("It's a draw!", false);
+            this.endGame();
         } 
         else {
             this.switchPlayer();
         }
+        this.render();
     }
 
-    computerMove() {
+    async computerMove() {
+        if (!this.players[this.currentPlayer].isComputer || this.isGameOver) return;
+
+        await this.delay(500);
+        
         const index = this.findBestMove();
         this.makeMove(index);
     }
@@ -93,7 +111,6 @@ class TicTacToeGame {
 
     switchPlayer() {
         this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
-        this.updateGameState();
     }
 
     render() {
@@ -104,14 +121,43 @@ class TicTacToeGame {
     }
 
     updateGameState() {
-        this.$gameState.textContent = `Player ${this.currentPlayer}'s turn`;
+        if (!this.isGameOver) {
+            this.$gameState.textContent = `${this.players[this.currentPlayer].name}'s turn (${this.currentPlayer})`;
+        }
+        else if (this.winner) {
+            this.$gameState.textContent = `${this.winner.name} wins!`;
+        }
+        else {
+            this.$gameState.textContent = "It's a draw!";
+        }
+    }
+
+    swapOrder() {
+        this.players = {'X': this.players.O, 'O': this.players.X};
+        this.newGame();
     }
 
     updatePlayerCount() {
         this.vsComputer = !this.vsComputer;
         this.$playerCount.textContent = `${2 - this.vsComputer}P`;
-        this.$playerIcon.src = `res/account${this.vsComputer ? '' : '-multiple'}.svg`
-        this.reset();
+        this.$playerIcon.src = `res/account${this.vsComputer ? '' : '-multiple'}.svg`;
+
+        this.players = {'X': new Player('Player'), 'O': this.vsComputer ? new Player('Average Joe', 3) : new Player('Player2')};
+        
+        this.resetScore();
+        this.newGame();
+    }
+
+    updateScoreboard() {
+        this.$nameX.textContent = this.players.X.name;
+        this.$nameO.textContent = this.players.O.name;
+        this.$scoreX.textContent = this.players.X.wins;
+        this.$scoreO.textContent = this.players.O.wins;
+    }
+
+    resetScore() {
+        this.players.X.score = 0;
+        this.players.O.score = 0;
     }
 
     checkWinner(board=null) {
@@ -123,7 +169,7 @@ class TicTacToeGame {
         board = board || this.board;
 
         return combos.some((combo) => {
-            const [a, b, c] = combo
+            const [a, b, c] = combo;
             
             if (board[a] && board[a] === board[b] && board[a] === board[c]) {
                 this.winningCombo = combo;
@@ -133,25 +179,36 @@ class TicTacToeGame {
         });
     }
 
-    highlightWinningLine(hasWinner) {
-        if (!hasWinner) return;
-        
-        this.winningCombo.forEach(i => this.$cells[i].classList.add('win'));
-    }
-
-    endGame(message, hasWinner) {
+    endGame() {
         this.isGameOver = true;
-        this.$gameState.textContent = message;
-        this.highlightWinningLine(hasWinner);
+
+        if (!this.winner) return;
+        
+        this.winner.wins++;
+        this.winningCombo.forEach(i => this.$cells[i].classList.add('win'));
+        this.updateScoreboard();
     }
 
-    reset() {
+    newGame() {
         this.board = Array(9).fill(null);
         this.currentPlayer = 'X';
         this.isGameOver = false;
+        this.winner = null;
 
         this.$cells.forEach(cell => cell.classList.remove('win'));
 
+        this.updateScoreboard();
+        this.updateGameState();
         this.render();
+        this.computerMove();
+    }
+
+    changeTheme() {
+        if (this.$page.classList.contains('dark')) this.$page.classList.remove('dark');
+        else this.$page.classList.add('dark');
+    }
+
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 }

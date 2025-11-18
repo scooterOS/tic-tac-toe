@@ -7,20 +7,22 @@
   <title>Tic-Tac-Toe</title>
 </head>
 <body>
-<div id="page" class="column ">
+<div id="page" class="column">
   <div id="toolbar" class="row">
     <div class="row">
-      <button id="reset-btn"><img src="res/restart.svg" alt="Reset game" title="reset"></button>
-      <button id="multiplayer-btn"><img src="res/account.svg" alt="Change number of players" title="number of players" id="player-icon">
+      <button id="reset-btn"><img src="res/restart.svg" alt="new game" title="new game"></button>
+      <button id="multiplayer-btn"><img src="res/account.svg" alt="Change number of players" title="change number of players" id="player-icon">
         <span id="player-count">1P</span>
       </button>
+      <button id="swap-btn"><img src="res/swap-horizontal.svg" alt="Swap turn order" title="swap turn order">X/O</button>
+      <button id="theme-btn"><img src="res/theme-light-dark.svg"></button>
       <button id="settings-btn" alt="Settings" title="settings"><img src="res/cog.svg"></button>
     </div>
     <div id="score-board" class="grid">
-      <span class="player1 name">Human</span>
-      <span class="player1 score">0</span>
-      <span class="player2 name">Computer</span>
-      <span class="player2 score">0</span>
+      <span class="playerX name"></span>
+      <span class="playerX score"></span>
+      <span class="playerO name"></span>
+      <span class="playerO score"></span>
     </div>
   </div>
   <div id="main-content" class="column">
@@ -35,7 +37,7 @@
       <div class="cell" data-index="7"><h1></h1></div>
       <div class="cell" data-index="8"><h1></h1></div>
     </div>
-    <span id="game-state">Human's Turn</span>
+    <span id="game-state"></span>
   </div>
 </div>
 <script src="game.js"></script>
