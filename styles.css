@@ -2,8 +2,14 @@
 
 * {
     box-sizing: border-box;
+    color: inherit;
     background-color: transparent;
     border: none;
+    -webkit-user-drag: none;
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
     padding: 0;
     margin: 0;
 }
@@ -108,7 +114,15 @@ button:active {
 .cell {
     width: var(--cell-size);
     height: var(--cell-size);
+    display: flex;
+    justify-content: center;
+    align-items: center;
     background-color: white;
+}
+
+.cell h1 {
+    font-family: 'Liberation Sans', 'Gill Sans', sans-serif;
+    font-size: calc(var(--cell-size) * 0.67);
 }
 
 .cell:hover {
@@ -117,4 +131,8 @@ button:active {
 
 .dark .cell {
     background-color: black;
+}
+
+.cell.win {
+    background-color: #47aa47;
 }
